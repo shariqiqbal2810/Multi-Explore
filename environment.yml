@@ -1,0 +1,19 @@
+name: multi-explore
+channels:
+  - defaults
+  - menpo
+dependencies:
+  - pip==20.0.2
+  - python==3.7.3
+  - pytorch==1.2.0
+  - matplotlib
+  - opencv
+  - pip:
+    - "git+https://github.com/openai/baselines.git@98257ef8c9bd23a24a330731ae54ed086d9ce4a7"
+    - gym==0.14.0
+    - tensorboard==1.14.0
+    - tensorflow==1.14.0
+    - tensorboardX==1.8
+    - vizdoom==1.1.7
+    - psutil
+    - pygame
