@@ -87,10 +87,8 @@ def make_parallel_env(config, seed):
     def get_env_fn(rank):
         def init_env():
             if config.env_type == 'gridworld':
-                env = VectObsEnv(GridWorld([config.map_ind],
-                                           task_length=1, train_combos=[(0, 0)],
-                                           test_combos=[(0, 0)],
-                                           seed=(seed * 1000 + rank),
+                env = VectObsEnv(GridWorld(config.map_ind,
+                                           seed=(seed * 1000),
                                            task_config=config.task_config,
                                            num_agents=config.num_agents,
                                            need_get=False,
@@ -182,6 +180,7 @@ def run(config):
                            for j in range(n_intr_rew_types)]
     recent_ep_lens = deque(maxlen=100)
     recent_found_treasures = [deque(maxlen=100) for i in range(config.num_agents)]
+    recent_tiers_completed = deque(maxlen=100)
     meta_turn_rets = []
     extr_ret_rms = [RunningMeanStd() for i in range(n_rew_heads)]
     t = 0
@@ -298,6 +297,8 @@ def run(config):
             for j in range(config.num_agents):
                 # len(infos) = number of active envs
                 recent_found_treasures[j].append(infos[i]['n_found_treasures'][j])
+            if config.env_type == 'gridworld':
+                recent_tiers_completed.append(infos[i]['tiers_completed'])
 
         if eps_this_turn >= config.metapol_episodes:
             if not config.uniform_heads and n_rew_heads > 1:
@@ -358,6 +359,8 @@ def run(config):
                 for i in range(config.num_agents):
                     logger.add_scalar('agent%i/n_found_treasures' % i, np.mean(recent_found_treasures[i]), t)
                 logger.add_scalar('total_n_found_treasures', sum(np.array(recent_found_treasures[i]) for i in range(config.num_agents)).mean(), t)
+                if config.env_type == 'gridworld':
+                    logger.add_scalar('tiers_completed', np.mean(recent_tiers_completed), t)
 
         if t % config.save_interval < config.n_rollout_threads:
             model.prep_training(device='cpu')
